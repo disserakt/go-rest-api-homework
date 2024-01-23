@@ -45,7 +45,7 @@ func getAllTask(w http.ResponseWriter, _ *http.Request) {
 	// сериализуем данные из слайса tasks
 	resp, err := json.Marshal(tasks)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -69,7 +69,7 @@ func postTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
+	// де-сериализуем данные добовляемого элемента в слайс tasks
 	if err = json.Unmarshal(buf.Bytes(), &task); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -77,53 +77,67 @@ func postTask(w http.ResponseWriter, r *http.Request) {
 
 	tasks[task.ID] = task
 
+	// в заголовок записываем тип контента, у нас это данные в формате JSON
 	w.Header().Set("Content-Type", "application/json")
+
+	// так как все успешно, то статус OK
 	w.WriteHeader(http.StatusCreated)
 }
 
 func getIdTask(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
+	// проверяем наличие элемента в мапе tasks
 	task, ok := tasks[id]
 	if !ok {
-		http.Error(w, "Not Found", http.StatusBadRequest)
+		http.Error(w, "Not Found", http.StatusNoContent)
 		return
 	}
 
+	// сериализуем данные для получаемого элемента из слайса tasks
 	resp, err := json.Marshal(task)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// в заголовок записываем тип контента, у нас это данные в формате JSON
 	w.Header().Set("Content-Type", "application/json")
+
+	// так как все успешно, то статус OK
 	w.WriteHeader(http.StatusOK)
+
+	// записываем сериализованные в JSON данные в тело ответа
 	_, err = w.Write(resp)
 	if err != nil {
 		return
 	}
 }
 
-
-
 func deleteTask(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
+	// проверяем наличие элемента в мапе tasks
 	_, ok := tasks[id]
 	if !ok {
-		http.Error(w, "Not Found", http.StatusBadRequest)
+		http.Error(w, "Not Found", http.StatusNoContent)
 		return
 	}
 
+	// удаляем элемент из слайса tasks
 	delete(tasks, id)
 
+	// сериализуем данные из слайса tasks
 	_, err := json.Marshal(tasks)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// в заголовок записываем тип контента, у нас это данные в формате JSON
 	w.Header().Set("Content-Type", "application/json")
+
+	// так как все успешно, то статус OK
 	w.WriteHeader(http.StatusOK)
 }
 
